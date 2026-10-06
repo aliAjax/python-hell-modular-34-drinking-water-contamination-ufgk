@@ -1,5 +1,20 @@
-<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>饮用水污染响应</title><body><h1>市政饮用水污染响应</h1><p>使用 JSON API 创建污染事件、登记水源或管网记录，并完成复检、通知、冲洗、消毒和恢复。</p><pre>GET /health
-GET /api/state
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>饮用水污染响应</title><body><h1>市政饮用水污染响应</h1><p>使用 JSON API 创建污染事件、登记水源或管网记录，并完成复检、通知、冲洗、消毒和恢复。</p>
+<h2>接口</h2><pre>GET  /health
+GET  /api/state
 POST /api/items
 POST /api/items/{id}/sources
-POST /api/items/{id}/actions</pre></body></html>
+POST /api/items/{id}/actions                     # verify/advise/switch_source/flush/disinfect/sample/adjudicate_batch/restore/cancel
+GET  /api/items/{id}                             # 含 batch_summary / effective_results / restoration_history / drafts
+GET  /api/items/{id}/sample-drafts/{client_id}
+POST /api/items/{id}/sample-drafts               # 外勤断网存草稿（client_id 幂等）
+PUT  /api/items/{id}/sample-drafts/sync          # 回网按批次合并，失败返回 resume_from
+PUT  /api/sample-drafts/sync                     # 全局合并所有待传草稿
+GET  /api/items/{id}/audit</pre>
+<p>复检 sample 需带 <code>batch_id</code>、<code>sample_id</code>、<code>zone_id</code>、<code>concentration</code>，来源由角色（lab/field_operator）确定。</p>
+<ul>
+<li>同批次同来源：后到顶掉先到（先到标记 superseded 留痕，不物理删除）。</li>
+<li>同批次不同来源：并存，结论冲突时批次 pending_judgement，经 adjudicate_batch 裁定或重测消除分歧。</li>
+<li>有效结果变化即重算恢复；晚到结果推翻结论时退回 reinspection_pending，restoration_history 写明原因。</li>
+<li>离线草稿回网按批次合并，版本冲突自动重试，失败后从失败批次续传。</li>
+<li>旧数据缺批次号时初始化自动补齐 LEGACY 历史批次，原恢复记录仍可查。</li>
+</ul></body></html>

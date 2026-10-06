@@ -78,6 +78,25 @@ def normalize_create(payload):
     }
 
 
+def normalize_sample(payload):
+    batch_id = require_text(payload, "batch_id")
+    sample_id = require_text(payload, "sample_id")
+    zone_id = require_text(payload, "zone_id")
+    concentration = number(payload, "concentration", 0)
+    sample = {
+        "batch_id": batch_id,
+        "sample_id": sample_id,
+        "zone_id": zone_id,
+        "concentration": concentration,
+    }
+    source = payload.get("source")
+    if source is not None:
+        if not isinstance(source, str) or not source.strip():
+            raise DomainError("invalid_source", "来源必须为字符串")
+        sample["source"] = source.strip()
+    return sample
+
+
 def normalize_source(payload):
     source_type = require_text(payload, "source_type")
     external_id = require_text(payload, "external_id")

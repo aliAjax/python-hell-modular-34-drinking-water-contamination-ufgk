@@ -58,6 +58,9 @@ def build_handler(service, static_dir):
                 if len(parts) == 4 and parts[:2] == ["api", "items"] and parts[3] == "audit":
                     item = service.get_item(int(parts[2]))
                     return self._send(200, {"events": item["audit"]})
+                if len(parts) == 5 and parts[:2] == ["api", "items"] and parts[3] == "sample-drafts":
+                    # 查询单条离线草稿
+                    return self._send(200, service.repository.get_draft(int(parts[2]), parts[4]))
                 if path == "/":
                     file_path = os.path.join(static_dir, "index.html")
                     with open(file_path, "rb") as handle:
@@ -86,6 +89,27 @@ def build_handler(service, static_dir):
                         raise DomainError("action_required", "缺少 action", 400)
                     expected = payload.pop("expected_version", None)
                     return self._send(200, service.act(int(parts[2]), action, payload, actor, role, expected, region))
+                if len(parts) == 4 and parts[:2] == ["api", "items"] and parts[3] == "sample-drafts":
+                    # 外勤断网先存草稿
+                    return self._send(201, service.save_sample_draft(int(parts[2]), payload, actor, role))
+                return self._send(404, {"error": "not_found", "message": "接口不存在"})
+            except DomainError as exc:
+                return self._error(exc)
+            except Exception as exc:
+                return self._error(DomainError("internal_error", str(exc), 500))
+
+        def do_PUT(self):
+            actor = role = region = None
+            try:
+                actor, role, region = self._identity()
+                path = urlparse(self.path).path
+                _ = self._json_body()
+                parts = [part for part in path.split("/") if part]
+                # 回网按批次合并草稿，失败后从该批次续传
+                if parts == ["api", "sample-drafts", "sync"]:
+                    return self._send(200, service.sync_drafts())
+                if len(parts) == 5 and parts[:2] == ["api", "items"] and parts[3] == "sample-drafts" and parts[4] == "sync":
+                    return self._send(200, service.sync_drafts(int(parts[2])))
                 return self._send(404, {"error": "not_found", "message": "接口不存在"})
             except DomainError as exc:
                 return self._error(exc)
