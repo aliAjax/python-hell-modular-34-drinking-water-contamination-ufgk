@@ -37,7 +37,7 @@ class WorkflowTest(unittest.TestCase):
         item = self.service.act(item["id"], "switch_source", {"alternate_source_id": "ALT-1"}, "coord-1", "coordinator", item["version"])
         item = self.service.act(item["id"], "flush", {"zone_id": "Z-1"}, "field-1", "field_operator", item["version"])
         item = self.service.act(item["id"], "disinfect", {"zone_id": "Z-1", "completed": True}, "field-1", "field_operator", item["version"])
-        item = self.service.act(item["id"], "sample", {"sample_id": "S-1", "zone_id": "Z-1", "concentration": 2}, "lab-1", "lab", item["version"])
+        item = self.service.act(item["id"], "sample", {"batch_id": "B-1", "sample_id": "S-1", "zone_id": "Z-1", "concentration": 2}, "lab-1", "lab", item["version"])
         item = self.service.act(item["id"], "restore", {"all_zones_cleared": True}, "coord-1", "coordinator", item["version"])
         self.assertEqual(item["status"], "restored")
         self.assertGreaterEqual(len(item["audit"]), 8)

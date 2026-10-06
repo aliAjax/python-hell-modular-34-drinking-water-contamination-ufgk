@@ -73,7 +73,10 @@ def normalize_create(payload):
         "complaints": int(payload.get("complaints", 0) or 0),
         "notifications": [],
         "response_actions": [],
-        "sample_results": [],
+        "sampling_batches": {},
+        "restoration": None,
+        "restoration_history": [],
+        "recovery_conclusion": None,
         "_stable_key": stable_key,
     }
 
